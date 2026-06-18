@@ -32,8 +32,12 @@ jobs:
       - name: Build _site
         run: node scripts/build.js
 
-      # ImageMagick ships on the runner; rasterize the single SVG source into
-      # the PNG sizes iOS and the manifest need. The repo stores only icon.svg.
+      # Rasterize the single SVG source into the PNG sizes iOS and the manifest
+      # need. The repo stores only icon.svg. ImageMagick is no longer preinstalled
+      # on ubuntu-24.04, so install it (plus the librsvg delegate for crisp SVG).
+      - name: Install ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick librsvg2-bin
+
       - name: Rasterize PWA icons
         run: |
           convert -background none icon.svg -resize 180x180 _site/apple-touch-icon.png
