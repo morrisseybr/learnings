@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bônus — Camadas de rede: as 7 camadas, foco em L4 e L7 (ALB vs NLB)</title>
+<style>
+  :root{
+    --bg:#0f1720; --card:#ffffff; --ink:#1a2230; --muted:#5b6675;
+    --accent:#ff9900; --accent-deep:#ec7211; --aws:#232f3e;
+    --green:#1f9d55; --green-bg:#e7f6ee; --red:#c5374a; --red-bg:#fdecee;
+    --line:#e7ebf0; --soft:#f6f8fa; --blue:#2f6fb0; --blue-bg:#e9f2fb;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; background:linear-gradient(180deg,#10202e,#16344a);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); line-height:1.6; padding:32px 16px;}
+  .wrap{max-width:760px; margin:0 auto;}
+  .card{background:var(--card); border-radius:16px; padding:40px 44px; box-shadow:0 18px 50px rgba(0,0,0,.35); margin-bottom:24px;}
+  .kicker{display:inline-flex; align-items:center; gap:8px; background:var(--aws); color:#fff; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:6px 12px; border-radius:999px;}
+  .kicker .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+  h1{font-size:30px; line-height:1.25; margin:18px 0 6px; color:var(--aws);}
+  h2{font-size:21px; margin:34px 0 10px; color:var(--aws); border-left:4px solid var(--accent); padding-left:12px;}
+  h3{font-size:16px; margin:22px 0 6px; color:var(--aws);}
+  p{margin:12px 0;}
+  .lead{font-size:17px; color:var(--muted);}
+  .mission{background:var(--soft); border:1px solid var(--line); border-radius:12px; padding:16px 18px; font-size:14.5px; margin:20px 0;}
+  .mission strong{color:var(--accent-deep);}
+  .callout{background:var(--green-bg); border-left:4px solid var(--green); border-radius:8px; padding:14px 16px; font-size:14.5px; margin:18px 0;}
+  .callout.warn{background:#fff8e6; border-left-color:var(--accent);}
+  .callout.info{background:var(--blue-bg); border-left-color:var(--blue);}
+  sup a{color:var(--accent-deep); text-decoration:none; font-weight:700;}
+  a.ref{color:var(--accent-deep); text-decoration:none; border-bottom:1px dotted var(--accent-deep); font-size:.92em;}
+  code{background:var(--soft); border:1px solid var(--line); border-radius:5px; padding:1px 6px; font-size:.9em;}
+
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:13.5px;}
+  th,td{border:1px solid var(--line); padding:10px 12px; text-align:left; vertical-align:top;}
+  th{background:var(--aws); color:#fff; font-size:13px;}
+  tr:nth-child(even) td{background:var(--soft);}
+
+  /* 7-layer stack */
+  .stack{border:2px dashed #b9c4d0; border-radius:14px; padding:16px; margin:18px 0; background:#fbfcfe;}
+  .layer{display:flex; align-items:flex-start; gap:12px; border:1.5px solid var(--line); border-radius:10px; padding:11px 14px; margin:7px 0; background:#fff;}
+  .layer .ln{flex:0 0 42px; font-weight:700; color:#fff; background:var(--muted); border-radius:7px; text-align:center; padding:6px 0; font-size:13px;}
+  .layer .body{flex:1; font-size:13px;}
+  .layer .nm{font-weight:700; color:var(--aws); font-size:14px;}
+  .layer .q{color:var(--accent-deep); font-style:italic; font-size:12.5px; margin:1px 0 3px;}
+  .layer .ex{color:var(--muted); font-size:12.5px;}
+  .layer.hot{border-color:var(--accent); box-shadow:0 0 0 2px #ffe9c8 inset;}
+  .layer.hot .ln{background:var(--accent-deep);}
+  .stack .grp{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:10px 0 2px 4px; font-weight:700;}
+  .tag{display:inline-block; font-size:10.5px; font-weight:700; color:#fff; background:var(--accent-deep); border-radius:5px; padding:1px 6px; margin-left:6px; vertical-align:middle;}
+
+  .envelope{background:var(--soft); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin:16px 0; font-size:14px;}
+  .envelope b{color:var(--aws);}
+  .flow{text-align:center; color:#90a0b2; font-size:13px; margin:8px 0;}
+
+  /* Quiz */
+  .quiz{background:var(--soft); border:1px solid var(--line); border-radius:14px; padding:24px 26px; margin-top:14px;}
+  .qnum{font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-deep);}
+  .qtext{font-weight:600; font-size:16px; margin:6px 0 14px; color:var(--aws);}
+  .opt{display:block; width:100%; text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:12px 14px; margin:8px 0; font-size:14.5px; cursor:pointer; transition:.15s; font-family:inherit; color:var(--ink);}
+  .opt:hover{border-color:var(--accent); background:#fffaf3;}
+  .opt.correct{border-color:var(--green); background:var(--green-bg);}
+  .opt.wrong{border-color:var(--red); background:var(--red-bg);}
+  .opt:disabled{cursor:default;}
+  .fb{display:none; margin-top:12px; padding:12px 14px; border-radius:10px; font-size:14px;}
+  .fb.show{display:block;}
+  .fb.ok{background:var(--green-bg); color:#155f37;}
+  .fb.no{background:var(--red-bg); color:#8a1f2c;}
+  .score{margin-top:18px; font-weight:700; color:var(--aws); display:none;}
+  .score.show{display:block;}
+
+  .ask{background:var(--aws); color:#fff; border-radius:14px; padding:22px 26px; margin-bottom:24px;}
+  .ask h3{color:#fff; margin-top:0;}
+  .ask code{background:rgba(255,255,255,.12); border:none; color:#fff; padding:2px 7px; border-radius:6px; font-size:13px;}
+  .ask p{color:#cdd8e3; font-size:14.5px;}
+  .nav{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;}
+  .nav a{flex:1; min-width:200px; text-decoration:none; color:var(--aws); border:1px solid var(--line); border-radius:10px; padding:12px 14px; font-size:14px; background:#fff;}
+  .nav a:hover{border-color:var(--accent); background:#fffaf3;}
+  .nav small{display:block; color:var(--muted); font-weight:400;}
+  .nav b{color:var(--accent-deep);}
+  .footer{color:#9fb0c0; font-size:13px; text-align:center; padding:8px 0 0;}
+  @media print{ body{background:#fff; padding:0;} .card{box-shadow:none;} .ask{background:#fff; color:#000; border:1px solid #ccc;} }
+  @media (max-width:560px){ .card{padding:28px 22px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card">
+    <span class="kicker"><span class="dot"></span> CLF-C02 · Lição 06 (Bônus) · Fundamento de rede</span>
+    <h1>Camadas de rede: o mapa completo, com foco em L4 e L7</h1>
+    <p class="lead">A <a class="ref" href="0005-auto-scaling-e-load-balancing.html">Lição 05</a> jogou dois rótulos sem explicar:
+    <b>ALB = camada 7</b> e <b>NLB = camada 4</b>. Esta bônus mostra <b>as 7 camadas inteiras</b> —
+    mas o destino é claro: entender por que essas duas decidem a escolha do load balancer.</p>
+
+    <div class="mission">
+      🎯 <strong>Por que esta bônus?</strong> "Camada 4/7" é jargão de rede que trava muita gente de
+      software. Ter o mapa todo na cabeça — e saber que só duas camadas importam para o balanceador —
+      te dá vocabulário para conversar com qualquer pessoa de infra de igual pra igual, exatamente a
+      autoridade técnica que a sua missão busca.
+      <span style="display:block;margin-top:8px;color:var(--muted)">⏱️ ~9 min · quiz de 5 questões. Pré-requisito: <a class="ref" href="0005-auto-scaling-e-load-balancing.html">Lição 05 (ELB)</a>.</span>
+    </div>
+
+    <div class="callout warn">
+      <b>O que cai na prova:</b> o CLF-C02 cobra de verdade só <b>camada 4 (NLB)</b> e <b>camada 7
+      (ALB)</b>. As outras 5 camadas aqui são <em>fluência fundamental</em> para sua missão de liderança —
+      aprenda o mapa, mas não sue para decorar a lista.
+    </div>
+
+    <h2>A ideia: camadas de abstração que se embrulham</h2>
+    <p>A rede é organizada em <b>camadas</b>, igual ao software: cada uma esconde a de baixo. O modelo
+    de referência é o <b>OSI</b>, com 7 camadas. Sua mensagem <b>desce</b> a pilha no remetente — cada
+    camada adiciona seu próprio embrulho (cabeçalho) — viaja como sinal físico, e <b>sobe</b> a pilha
+    no destino, sendo desembrulhada camada a camada.<sup><a href="#r1">1</a></sup></p>
+    <div class="flow">⬇️ remetente: aplicação → … → bits no fio &nbsp;·&nbsp; ⬆️ destino: bits → … → aplicação</div>
+
+    <h2>As 7 camadas, cada uma como uma pergunta</h2>
+    <p>Não decore a ordem — siga a lógica: cada camada responde <b>uma pergunta</b> necessária para a
+    mensagem viajar e ser entendida. As duas destacadas (<span class="tag">load balancer</span>) são as
+    que você vai usar de verdade.</p>
+    <div class="stack">
+      <div class="grp">↑ Camadas de "host" — onde vive o software</div>
+      <div class="layer hot">
+        <span class="ln">7</span>
+        <div class="body"><span class="nm">Aplicação <span class="tag">ALB</span></span>
+          <div class="q">"Qual protocolo da aplicação e o que o usuário quer?"</div>
+          <div class="ex">HTTP/HTTPS, DNS, SMTP, SSH · <b>AWS:</b> ALB, API Gateway, CloudFront, Route 53</div></div>
+      </div>
+      <div class="layer">
+        <span class="ln">6</span>
+        <div class="body"><span class="nm">Apresentação</span>
+          <div class="q">"Em que formato? Cifrado? Comprimido?"</div>
+          <div class="ex">TLS/SSL, codificação (UTF-8), JPEG · <b>AWS:</b> certificados via ACM (HTTPS)</div></div>
+      </div>
+      <div class="layer">
+        <span class="ln">5</span>
+        <div class="body"><span class="nm">Sessão</span>
+          <div class="q">"Quem abre, mantém e fecha a conversa?"</div>
+          <div class="ex">Controle de diálogo (na prática, quase sempre fundida no app)</div></div>
+      </div>
+      <div class="layer hot">
+        <span class="ln">4</span>
+        <div class="body"><span class="nm">Transporte <span class="tag">NLB</span></span>
+          <div class="q">"Entrega confiável ou rápida? Para qual porta/processo?"</div>
+          <div class="ex"><b>TCP</b> (confiável) vs <b>UDP</b> (rápido) + portas · <b>AWS:</b> NLB, Security Groups, NACLs</div></div>
+      </div>
+      <div class="grp">↓ Camadas de "mídia" — como os dados realmente trafegam</div>
+      <div class="layer">
+        <span class="ln">3</span>
+        <div class="body"><span class="nm">Rede</span>
+          <div class="q">"Por qual rota chego ao destino, entre redes diferentes?"</div>
+          <div class="ex">IP, roteamento, routers · <b>AWS:</b> VPC, sub-redes, route tables</div></div>
+      </div>
+      <div class="layer">
+        <span class="ln">2</span>
+        <div class="body"><span class="nm">Enlace (Data Link)</span>
+          <div class="q">"Como entrego ao próximo salto no mesmo segmento?"</div>
+          <div class="ex">MAC, switches, Ethernet, Wi-Fi, ARP · <b>AWS:</b> abstraído</div></div>
+      </div>
+      <div class="layer">
+        <span class="ln">1</span>
+        <div class="body"><span class="nm">Física</span>
+          <div class="q">"Como bits viram sinais no mundo real?"</div>
+          <div class="ex">Cabos, fibra, rádio, voltagem · <b>AWS:</b> hardware do data center (você nunca toca)</div></div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      🧠 <b>O presente que a nuvem te dá:</b> on-premises você cuidaria das camadas 1 e 2 (cabos,
+      switches). Na AWS, <b>1 e 2 somem para você</b> e você opera da <b>camada 3 (VPC)</b> para cima.
+      É a vantagem "parar de manter data centers" vista pela lente das camadas.
+    </div>
+
+    <h2>O foco: camada 4 vs camada 7 (NLB vs ALB)</h2>
+    <p>De todas as 7, só duas decidem o tipo de load balancer — porque a pergunta é uma só:
+    <b>quão fundo o balanceador abre o pacote?</b></p>
+
+    <div class="envelope">
+      📨 <b>Analogia do envelope.</b> A <b>camada 4</b> é o <b>endereço escrito no envelope</b>
+      (IP + porta): dá para entregar <em>sem abrir</em>. A <b>camada 7</b> é <b>abrir o envelope e ler a
+      carta</b> (o caminho da URL, o cabeçalho <code>Host</code>, o cookie) para então decidir a rota.
+    </div>
+
+    <table>
+      <tr><th></th><th>NLB — camada 4</th><th>ALB — camada 7</th></tr>
+      <tr><td><b>O que enxerga</b></td><td>IP + porta (não abre o envelope)</td><td>Conteúdo HTTP: URL, host, headers, cookies</td></tr>
+      <tr><td><b>Pode rotear por…</b></td><td>destino TCP/UDP</td><td><b>caminho</b> (<code>/api</code> → grupo X), <b>host</b>, método…</td></tr>
+      <tr><td><b>Velocidade</b></td><td>⚡ extrema — milhões de req/s, latência mínima</td><td>um pouco mais de overhead (ele lê e interpreta)</td></tr>
+      <tr><td><b>Protocolo</b></td><td>TCP / UDP (qualquer coisa)</td><td>HTTP / HTTPS (web)</td></tr>
+      <tr><td><b>Use quando…</b></td><td>performance/latência extrema, TCP não-HTTP, IP estático</td><td>app web, roteamento por conteúdo, redirecionar/autenticar</td></tr>
+    </table>
+
+    <div class="callout">
+      <b>A regra de decisão em uma frase:</b> precisa que o balanceador <em>leia o HTTP</em> para
+      decidir (rotear <code>/api</code> e <code>/site</code> para grupos diferentes)? → <b>ALB (L7)</b>.
+      Só precisa de velocidade bruta encaminhando pacotes? → <b>NLB (L4)</b>. Mais inteligência custa um
+      pouco de overhead; menos inteligência rende performance máxima.
+    </div>
+
+    <div class="callout warn">
+      <b>Cuidado com a intuição "L7 é melhor que L4":</b> não é melhor, é <em>diferente</em>. O NLB é
+      superior justamente onde você <u>não</u> quer que ninguém abra o envelope — latência mínima e
+      throughput gigante. Quem decide é o trabalho, não o número da camada. (Mesma lógica do RI vs
+      Savings Plans: não existe "o melhor", existe "o certo para a carga".)
+    </div>
+
+    <h3>OSI vs. o modelo real (TCP/IP)</h3>
+    <p>O OSI é didático (7 camadas). A internet roda o <b>TCP/IP</b>, mais enxuto (~4 camadas). "Camada
+    4" e "camada 7" sobrevivem no dia a dia porque existem nos dois modelos e batem com o que os
+    balanceadores fazem.<sup><a href="#r2">2</a></sup></p>
+
+    <h2>Conectando à sua missão</h2>
+    <p>Quando alguém perguntar <em>"por que ALB e não NLB?"</em>, a resposta defensável não é "porque é
+    o padrão" — é: <b>"nosso tráfego é HTTP e precisamos rotear por caminho de URL para microsserviços
+    diferentes; isso exige um balanceador de camada 7"</b>. E numa investigação de incidente, a camada
+    vira um localizador: "o ping responde (L3 ok) mas a porta recusa (L4)". Falar nessa régua é decidir
+    e diagnosticar de igual pra igual com infra.</p>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="card">
+    <h2 style="margin-top:0">✅ Teste rápido — feedback na hora</h2>
+    <p class="lead" style="font-size:15px">5 cenários. Clique e veja a correção na hora.</p>
+
+    <div class="quiz" data-correct="b" data-exp="Rotear com base no CAMINHO da URL (/api vs /site) exige ler o conteúdo HTTP — isso é camada 7, trabalho do ALB.">
+      <div class="qnum">Questão 1 de 5</div>
+      <div class="qtext">Você quer mandar <code>/api</code> para um grupo de instâncias e <code>/site</code> para outro, com base na URL. Que load balancer faz isso?</div>
+      <button class="opt" data-k="a">NLB — camada 4</button>
+      <button class="opt" data-k="b">ALB — camada 7</button>
+      <button class="opt" data-k="c">Qualquer um, é igual</button>
+      <button class="opt" data-k="d">Nenhum balanceador roteia por URL</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-correct="c" data-exp="Camada 4 (transporte) trabalha com IP + porta via TCP/UDP — encaminha o pacote sem abrir/ler o conteúdo da aplicação.">
+      <div class="qnum">Questão 2 de 5</div>
+      <div class="qtext">O que caracteriza um balanceador de <b>camada 4</b> (NLB)?</div>
+      <button class="opt" data-k="a">Lê cabeçalhos HTTP e cookies para decidir a rota</button>
+      <button class="opt" data-k="b">Só funciona com HTTPS</button>
+      <button class="opt" data-k="c">Encaminha por IP e porta (TCP/UDP), sem ler o conteúdo</button>
+      <button class="opt" data-k="d">Armazena conteúdo estático perto do usuário</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-correct="a" data-exp="Latência mínima e throughput altíssimo com TCP puro é o ponto forte do NLB (camada 4): ele só encaminha pacotes, sem o overhead de interpretar HTTP.">
+      <div class="qnum">Questão 3 de 5</div>
+      <div class="qtext">Um serviço de jogos usa TCP puro e exige a menor latência possível, com milhões de conexões. Qual balanceador?</div>
+      <button class="opt" data-k="a">NLB — camada 4</button>
+      <button class="opt" data-k="b">ALB — camada 7</button>
+      <button class="opt" data-k="c">GWLB — para HTTP</button>
+      <button class="opt" data-k="d">Nenhum suporta TCP</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-correct="c" data-exp="Roteamento por endereço IP entre redes diferentes é a camada 3 (Rede). Na AWS, é o território da VPC — uma camada abaixo do que os load balancers usam.">
+      <div class="qnum">Questão 4 de 5</div>
+      <div class="qtext">Roteamento por endereço IP entre redes diferentes (o território da VPC) acontece em qual camada?</div>
+      <button class="opt" data-k="a">Camada 7 (Aplicação)</button>
+      <button class="opt" data-k="b">Camada 4 (Transporte)</button>
+      <button class="opt" data-k="c">Camada 3 (Rede)</button>
+      <button class="opt" data-k="d">Camada 1 (Física)</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-correct="d" data-exp="Na analogia: camada 4 = ler só o endereço do envelope (IP+porta) e entregar; camada 7 = abrir e ler a carta (URL/headers) para decidir.">
+      <div class="qnum">Questão 5 de 5</div>
+      <div class="qtext">Na analogia do envelope, qual frase descreve a diferença L4 vs L7?</div>
+      <button class="opt" data-k="a">L4 abre a carta; L7 lê só o endereço</button>
+      <button class="opt" data-k="b">Ambas abrem a carta sempre</button>
+      <button class="opt" data-k="c">Nenhuma olha o envelope</button>
+      <button class="opt" data-k="d">L4 lê só o endereço do envelope; L7 abre e lê a carta</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="score"></div>
+  </div>
+
+  <!-- ASK -->
+  <div class="ask">
+    <h3>👩‍🏫 Sua vez de produzir (é onde o aprendizado acontece)</h3>
+    <p>Volte ao chat e me mande, <b>com suas palavras</b>, um mini cheat sheet de <b>L4 vs L7</b>:
+    o que cada camada enxerga e a regra de decisão ALB vs NLB. Bônus: liste as 7 camadas com a pergunta
+    de cada uma. Não vale colar daqui — comprimir do seu jeito é o que fixa; eu corrijo e viramos o
+    verbete do glossário. Dúvidas valem: <code>"por que o NLB pode ter IP estático?"</code> ou
+    <code>"onde entra o HTTPS/TLS nessas camadas?"</code>.</p>
+  </div>
+
+  <!-- NAV -->
+  <div class="card">
+    <h2 style="margin-top:0">🔗 Continue</h2>
+    <div class="nav">
+      <a href="0005-auto-scaling-e-load-balancing.html"><b>⬅️ Lição 05</b><small>Auto Scaling · ELB</small></a>
+      <a href="../reference/GLOSSARY.md"><b>📖 Glossário</b><small>seção Camadas de rede</small></a>
+    </div>
+    <h3 style="margin-top:26px">Fontes</h3>
+    <p id="r1" style="font-size:13px;color:var(--muted)"><sup>1</sup>
+      Cloudflare — <a class="ref" href="https://www.cloudflare.com/learning/ddos/glossary/open-systems-interconnection-model-osi/">O modelo OSI</a></p>
+    <p id="r2" style="font-size:13px;color:var(--muted)"><sup>2</sup>
+      AWS — <a class="ref" href="https://aws.amazon.com/what-is/osi-model/">What is the OSI model?</a> ·
+      <a class="ref" href="https://aws.amazon.com/elasticloadbalancing/features/">Tipos de Elastic Load Balancing</a></p>
+  </div>
+
+  <div class="footer">Lição 06 (Bônus) · AWS Certified Cloud Practitioner (CLF-C02) · Fundamento de rede 🚀</div>
+</div>
+
+<script>
+(function(){
+  var quizzes = document.querySelectorAll('.quiz');
+  var total = quizzes.length, answered = 0, correct = 0;
+  var scoreEl = document.querySelector('.score');
+  quizzes.forEach(function(q){
+    var answer = q.getAttribute('data-correct');
+    var exp = q.getAttribute('data-exp') || '';
+    var opts = q.querySelectorAll('.opt');
+    var fb = q.querySelector('.fb');
+    opts.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(q.dataset.done) return;
+        q.dataset.done="1"; answered++;
+        var k = btn.getAttribute('data-k');
+        opts.forEach(function(b){ b.disabled = true; });
+        q.querySelector('.opt[data-k="'+answer+'"]').classList.add('correct');
+        if(k===answer){ correct++; fb.className='fb ok show'; fb.innerHTML='✔️ <b>Correto!</b> '+exp; }
+        else{ btn.classList.add('wrong'); fb.className='fb no show'; fb.innerHTML='✗ <b>Quase.</b> '+exp; }
+        if(answered===total){
+          var msg = correct===total ? '🏆 Gabaritou! Camadas de rede e L4 vs L7 são suas.' :
+                    correct>=total-1 ? '💪 Muito bom. Reveja só o ponto que escapou.' :
+                    '📚 Releia a pilha das 7 camadas e a analogia do envelope, e me peça mais cenários.';
+          scoreEl.textContent='Resultado: '+correct+'/'+total+' — '+msg;
+          scoreEl.classList.add('show');
+          scoreEl.scrollIntoView({behavior:'smooth', block:'center'});
+        }
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

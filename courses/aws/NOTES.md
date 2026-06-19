@@ -11,6 +11,9 @@
 - Lições curtas e densas (pouco tempo livre, prazo de 2–4 semanas).
 - Gosta de entender o *porquê*, não só o *como* (perfil de quem vai defender decisões).
 - Como é dev, analogias com programação/sistemas funcionam bem.
+- **Mnemônicos de lista (siglas tipo C-P-S-P) NÃO funcionam para ele.** Listas de 4–5 itens
+  soltos não fixam. Preferir **derivação por raciocínio / primeiros princípios** — transformar
+  a lista numa sequência lógica de decisão (ex.: funil de "guard clauses"). (Confirmado 18/06.)
 
 ## Estratégia do curso
 - Exame: 65 questões, 90 min, nota de corte 700/1000, ~US$100, validade 3 anos.
@@ -23,13 +26,15 @@
 - Cada lição = 1 conceito + quiz com feedback imediato. Reforçar vocabulário via GLOSSARY.
 
 ## Pendências / ideias de próximas lições
-- **DÍVIDAS DE PRODUÇÃO em aberto (cobrar antes de marcar como aprendido):**
-  1. Mnemônico próprio das **6 vantagens** — item de revisão FALHADO em 12/06, venceu 14/06,
-     ainda não entregue. NÃO fornecer um pronto; ele cria o dele.
-  2. Cheat sheet de memória dos **5 modelos de compra** (pedido na Lição 04). Quiz 5/5 já é
-     evidência forte, mas a compressão escrita ainda não veio.
-- Lição 04 (EC2) e Lição 05 (Auto Scaling + ELB) entregues; ambas 5/5 no quiz (a 05 a confirmar).
-- D3 próximos: **Lição 06 = Amazon S3** (storage, já anunciada na 05); depois Lambda/contêineres
+- Dívidas de produção da Lição 04 (6 vantagens + 5 modelos) QUITADAS em 15/06 (ver LR-0006). OK.
+- Lição 05 (Auto Scaling + ELB): ESTUDADA em 18/06, quiz 5/5. ✅
+- Lição 06 (BÔNUS) = "Camadas de rede" criada em 18/06 a pedido dele. Decisão dele (18/06): UMA aula
+  só, cobrindo as 7 camadas mas com ÊNFASE em L4 e L7 conectadas a NLB/ALB. (Cheguei a separar numa
+  Lição 07 só de OSI; ele preferiu consolidar — Lição 07 apagada.) Estilo: 7 camadas = 7 perguntas
+  (sem mnemônico, preferência dele); só L4/L7 caem na prova, resto é fluência fundamental. ENTREGUE,
+  ainda não praticada: pedi mini cheat sheet L4 vs L7 (bônus: as 7 camadas) → vira verbete do glossário.
+- ⚠️ Renumeração: o **Amazon S3 volta a ser a Lição 07** (bônus de rede ocupa só o nº 06).
+- D3 próximos: **Lição 07 = Amazon S3** (storage, já anunciada na 05); depois Lambda/contêineres
   (ECS/Fargate), depois bancos (RDS/DynamoDB) e rede (VPC).
 - D2: Modelo de Responsabilidade Compartilhada (muito cobrado) — Q4 das Lições 04/05 já planta a semente.
 - D2: IAM (usuários, grupos, roles, políticas, MFA).

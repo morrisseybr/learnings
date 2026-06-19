@@ -76,6 +76,36 @@ Vocabulário canônico. Toda lição deve usar estes termos de forma consistente
   muda *quantas* instâncias existem; o ELB espalha o tráfego entre elas (em várias AZs). Realiza
   "parar de adivinhar capacidade" e a **elasticidade**.
 
+## Camadas de rede — modelo OSI (base para ALB vs NLB)
+- **Modelo OSI** — modelo de referência: 7 camadas de abstração (cada uma esconde a de baixo). A
+  mensagem **desce embrulhando** no remetente e **sobe desembrulhando** no destino (encapsulamento).
+  **Para a prova CLF-C02 só importam L4 e L7**; o resto é fluência fundamental.
+
+  As 7 camadas, cada uma = a pergunta que responde (de cima para baixo):
+  | # | Camada | Pergunta | Exemplos · AWS |
+  |---|--------|----------|----------------|
+  | 7 | Aplicação | "Qual protocolo da app?" | HTTP/DNS/SMTP · ALB, API Gateway, Route 53 |
+  | 6 | Apresentação | "Que formato? Cifrado?" | TLS, UTF-8, JPEG · ACM (HTTPS) |
+  | 5 | Sessão | "Quem mantém o diálogo?" | controle de sessão (quase sempre fundida no app) |
+  | 4 | Transporte | "Confiável ou rápido? Que porta?" | TCP/UDP · NLB, Security Groups, NACLs |
+  | 3 | Rede | "Por qual rota, entre redes?" | IP, roteamento · VPC, route tables |
+  | 2 | Enlace | "Próximo salto no segmento?" | MAC, switches, Ethernet · abstraído pela AWS |
+  | 1 | Física | "Bits viram sinais como?" | cabos, fibra, rádio · hardware do data center |
+
+- **Encapsulamento** — cada camada embrulha a de cima (um `GET /x` (L7) viaja dentro de TCP:443 (L4)
+  dentro de um pacote IP (L3)…).
+- **OSI vs TCP/IP** — o real (TCP/IP) agrupa em ~4 camadas: Aplicação (OSI 7·6·5) · Transporte (4) ·
+  Internet (3) · Enlace/Acesso (2·1). "Camada 4" e "camada 7" sobrevivem porque existem nos dois.
+- **Cloud e as camadas** — on-prem você cuida de L1-L2; na AWS opera da **L3 (VPC) para cima**.
+- **Camada 4 (transporte)** — TCP/UDP: **IP + porta**, encaminha **sem abrir/ler** o conteúdo.
+  Analogia: ler só o **endereço do envelope**.
+- **Camada 7 (aplicação)** — HTTP/HTTPS: enxerga **URL, host, cabeçalhos, cookies**. Analogia: **abrir
+  o envelope e ler a carta** para decidir.
+- **ALB = camada 7** → roteia por conteúdo (caminho da URL, host); ideal para web/HTTP.
+- **NLB = camada 4** → encaminha por IP/porta (TCP/UDP); latência mínima, throughput altíssimo, IP estático.
+  Regra: precisa ler o HTTP para decidir → ALB; só velocidade bruta → NLB. Não existe "melhor", existe
+  o certo para a carga.
+
 ## Termos a definir nas próximas lições
 - Shared Responsibility Model, IAM, S3, VPC, RDS, Free Tier, Well-Architected.
   (Adicionar aqui conforme as lições forem criadas.)
