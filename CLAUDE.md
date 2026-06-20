@@ -6,7 +6,7 @@ Hub estático auto-indexado de cursos/aulas em HTML, publicado no GitHub Pages, 
 
 ### Issue tracker
 
-Issues e PRDs vivem como GitHub Issues do repositório (`gh` CLI). See `docs/agents/issue-tracker.md`.
+Issues e PRDs vivem como GitHub Issues do repositório (`gh` CLI); PRs externos não entram na fila de triage. Issues criadas a partir de um PRD são vinculadas como sub-issues nativas do PRD. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
