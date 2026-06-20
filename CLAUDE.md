@@ -15,3 +15,9 @@ Vocabulário padrão (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-fo
 ### Domain docs
 
 Single-context: um `CONTEXT.md` + `docs/adr/` na raiz. See `docs/agents/domain.md`.
+
+## Git Flow
+
+You don't need to create branch for each issue. We will push directly on main after my review.
+
+Do not commit after finish a issue. I want to review uncommitted changes and make the commit myself.
