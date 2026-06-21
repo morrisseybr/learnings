@@ -9,7 +9,9 @@
     "preview": "astro preview",
     "check": "astro check",
     "test": "vitest run",
-    "test:legacy": "node --test scripts/*.test.js"
+    "test:legacy": "node --test scripts/*.test.js",
+    "gen:guide": "node scripts/generate-catalog-guide.mts",
+    "gen:guide:check": "node scripts/generate-catalog-guide.mts --check"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",

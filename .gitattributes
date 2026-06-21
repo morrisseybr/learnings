@@ -1,0 +1,4 @@
+# The Catalog guide is generated with LF line endings (scripts/generate-catalog-guide.mts).
+# Pin it to LF on every platform so the byte-exact "guide is up to date" check and
+# `npm run gen:guide:check` don't oscillate under core.autocrlf=true on Windows.
+docs/catalog-guide.md text eol=lf
