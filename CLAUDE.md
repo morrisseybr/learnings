@@ -12,6 +12,10 @@ Issues e PRDs vivem como GitHub Issues do repositório (`gh` CLI); PRs externos 
 
 Vocabulário padrão (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
 
+### Solicitação de Componente
+
+O Desenvolvedor abre uma Issue `component-request` + `needs-triage` quando o Professor julga um Esboço reutilizável; um humano promove (Esboço → Componente). See `docs/agents/component-request.md`.
+
 ### Domain docs
 
 Single-context: um `CONTEXT.md` + `docs/adr/` na raiz. See `docs/agents/domain.md`.
