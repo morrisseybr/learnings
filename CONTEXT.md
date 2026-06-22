@@ -48,7 +48,7 @@ Aulas e Componentes-como-vocabulário; é deliberadamente cego à Plataforma (As
 build, repo, `gh`). Quando precisa de um visual ou interação que o Catálogo não
 tem, delega ao Desenvolvedor, sinalizando se quer ou não uma Solicitação de
 Componente.
-_Avoid_: Pedagogo, autor, gerador (use "Professor"; `teach-v2` é a implementação atual).
+_Avoid_: Pedagogo, autor, gerador (use "Professor"; a skill `/professor` no repo é a implementação, lineage `teach-v2`).
 
 **Desenvolvedor**:
 O agente que, a pedido do Professor, cria um Esboço e o entrega pronto para uso.
