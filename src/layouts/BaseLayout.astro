@@ -56,7 +56,10 @@ const base = import.meta.env.BASE_URL;
       Arial, sans-serif;
     color: var(--ink);
     line-height: 1.6;
-    padding: 32px 16px;
+    /* Mobile-first: a single narrow gutter. The card carries the rest of the
+       breathing room via its own padding, so content isn't squeezed into a
+       corridor by margin + padding stacking. ≥600px widens it below. */
+    padding: 32px 8px;
   }
   .wrap {
     max-width: var(--measure);

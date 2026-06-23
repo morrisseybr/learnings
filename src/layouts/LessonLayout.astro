@@ -117,10 +117,27 @@ const { title, domain, summary, estMinutes, courseTitle, courseHref } =
     padding: 0;
     color: inherit;
   }
+  /* Wide comparison tables (IaaS/PaaS/SaaS, EC2 purchase models, …) scroll
+     horizontally instead of overflowing the card on mobile. The `.table-scroll`
+     wrapper is injected around every Markdown table by the rehype plugin in
+     astro.config.mjs; the first column stays pinned so the row label is always
+     visible while the rest of the row scrolls under it. */
+  .lesson .table-scroll {
+    margin: 16px 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+  }
+  .lesson .table-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+  .lesson .table-scroll::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 3px;
+  }
   .lesson table {
     width: 100%;
     border-collapse: collapse;
-    margin: 16px 0;
     font-size: 13.5px;
   }
   .lesson th,
@@ -137,14 +154,30 @@ const { title, domain, summary, estMinutes, courseTitle, courseHref } =
   .lesson tr:nth-child(even) td {
     background: var(--soft);
   }
+  /* Sticky first column. Each pinned cell needs an opaque background so the
+     scrolling cells don't show through underneath it. */
+  .lesson th:first-child,
+  .lesson td:first-child {
+    position: sticky;
+    left: 0;
+  }
+  .lesson td:first-child {
+    background: var(--card);
+  }
+  .lesson tr:nth-child(even) td:first-child {
+    background: var(--soft);
+  }
 
   .lesson__nav {
     margin-top: 4px;
   }
 
-  @media (max-width: 560px) {
+  /* One breakpoint for the whole shell at 600px (matches BaseLayout's body
+     padding). On mobile the card hugs the gutter: lateral padding drops to
+     16px so the freed width goes to the content, not to nested padding. */
+  @media (max-width: 599px) {
     .lesson {
-      padding: 28px 22px;
+      padding: 24px 16px;
     }
   }
 </style>

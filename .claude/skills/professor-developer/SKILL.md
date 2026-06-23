@@ -62,6 +62,21 @@ Construa o Esboço como **Componente Astro** em `src/sketches/<Nome>.astro`. O
   com defaults sensatos para que a Aula possa referenciar o Esboço **pelado**
   (`<Nome />`) e ainda renderizar. Marque os dados no DOM com atributos `data-*`
   (`data-node`, `data-layer`, …) — é assim que o teste prova que os dados chegaram.
+- **Mobile-first.** Desenhe a **360px primeiro**: o estilo base (sem media query)
+  é a tela estreita, e só `@media (min-width: 600px)` acrescenta colunas e espaço
+  no desktop — **nunca o contrário** (`max-width` que desfaz um layout largo).
+  Na prática:
+  - **Empilha por padrão.** `flex`/`grid` começam em **coluna única**; as colunas
+    extras entram só a partir de `≥ 600px`.
+  - **Um gutter só.** O respiro lateral mora **ou** na margem do container **ou**
+    no padding do card — nunca os dois grandes e somados.
+  - **Alvos de toque ≥ 44px.** Botões, abas e linhas clicáveis com altura mínima
+    de toque confortável.
+  - **Tipografia legível.** Corpo ≥ 13–14px no mobile; títulos escalam com
+    `clamp()`, não com saltos fixos.
+  - **Toda tabela de 3+ colunas declara seu plano mobile:** vira scroll horizontal
+    (com a 1ª coluna fixa), cards empilhados rótulo→valor, ou colunas priorizadas
+    que expandem sob demanda — nunca estoura o card.
 
 Estude os Esboços vizinhos em `src/sketches/` (ex.: `PatternFlow.astro`,
 `OsiStack.astro`) como referência de estilo e estrutura antes de escrever o seu.
