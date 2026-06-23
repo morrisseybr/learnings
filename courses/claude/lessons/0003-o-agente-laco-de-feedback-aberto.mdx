@@ -1,0 +1,172 @@
+---
+title: "O agente: o laço de feedback aberto"
+order: 3
+domain: "Domínio 1 — Arquitetura Agêntica"
+summary: "Orquestrador também decide passos a partir de resultados — então não é isso que faz um agente. A fronteira é mais fina: um laço aberto onde o próprio modelo decide quando parar."
+prerequisites: ["claude/0002-padroes-de-workflow"]
+estMinutes: 8
+---
+
+<Kicker>CCA-F · Lição 03 · Domínio 1 — Arquitetura Agêntica</Kicker>
+
+<Callout variant="info">
+  ↩︎ **Da Lição 02:** o **orquestrador-trabalhadores** é o último degrau do
+  workflow — ele já decompõe a tarefa em runtime. Tão perto do agente que é fácil
+  confundir. Esta Aula traça a linha exata.
+</Callout>
+
+<MissionBox title="Por que importa">
+  Quase toda questão de cenário da prova embute uma decisão: **isto pede um agente,
+  ou um workflow resolve?** Errar a fronteira é errar a arquitetura inteira — e o
+  custo. Saber onde ela passa, e por quê, é a competência central do Domínio 1 (o
+  de maior peso) e a base para multi-agente e MCP, seus pontos a reforçar.
+
+  <span slot="meta">⏱️ ~8 min · quiz de cenário · pré-requisito: Lição 02.</span>
+</MissionBox>
+
+## A armadilha: "decidir a partir do resultado" não basta
+
+É tentador dizer que um agente é aquele que **decide os próximos passos a partir
+do resultado dos anteriores**. Mas olhe o orquestrador-trabalhadores: ele decompõe,
+vê o que os workers devolveram e **sintetiza** — ou seja, ele *também* decide com
+base em resultados. Se essa fosse a linha, o orquestrador já seria agente. Não é.
+
+A diferença não está em *haver* decisão sobre resultados. Está na **forma do laço**.
+
+## Workflow faz UMA passada. Agente roda um laço aberto.
+
+<CompareCards
+  cards={[
+    {
+      label: "Orquestrador (workflow)",
+      tag: "laço fechado",
+      description: "decompõe → delega → sintetiza → FIM. O ponto de parada é estrutural, escrito no código. Uma passada e acabou.",
+    },
+    {
+      label: "Agente",
+      tag: "laço aberto",
+      highlight: true,
+      description: "age → observa o ground truth → re-planeja → age de novo… e o PRÓPRIO MODELO decide quando parar. Não há 'fim' roteirizado.",
+    },
+  ]}
+/>
+
+O mecanismo que define o agente é o **action loop** (Lição 01): **age → observa o
+ground truth do ambiente → decide a próxima ação**, repetindo até concluir ou pedir
+ajuda. Duas propriedades o tornam *aberto*, e é a combinação delas que cruza a
+fronteira:
+
+1. **O número de passos é imprevisível.** Você não consegue roteirizar quantas
+   voltas o laço dará — depende do que o ambiente devolver.
+2. **O critério de parada é do modelo.** Não é um `while` no seu código; é o
+   modelo que julga "terminei" (ou "preciso de um humano").
+
+<Callout variant="warn">
+  **Armadilha de prova (não achate o agente):** descrever um agente como "só
+  decomposição dinâmica" é a confusão clássica — isso é orquestrador. O que
+  diferencia é o **laço de feedback aberto + parada decidida pelo modelo**. Guarde:
+  orquestrador = uma passada com fim no código; agente = laço até o modelo parar.
+</Callout>
+
+## Quando escolher um agente (e o preço dele)
+
+A regra da Anthropic é deliberadamente conservadora: **comece simples; só suba para
+agente quando o ganho for claro.** [r1]
+
+<CompareCards
+  cards={[
+    {
+      label: "Prefira workflow",
+      tag: "caminho previsível",
+      description: "Você consegue mapear os passos de antemão. Quer consistência, latência baixa e custo controlado. A tarefa tem estrutura fixa.",
+    },
+    {
+      label: "Justifica um agente",
+      tag: "caminho emergente",
+      description: "Problema aberto: impossível prever o nº de passos ou roteirizar o caminho. A flexibilidade do modelo guiando decisões compensa o custo.",
+    },
+  ]}
+/>
+
+O agente **troca latência e custo por autonomia**: cada volta do laço é mais uma
+chamada ao modelo, e o caminho emergente é menos previsível. [r1] Por isso ele
+**exige andaimes**: condições de parada explícitas, observação confiável do ground
+truth (senão o modelo "imagina" que agiu) e, em produção, limites de orçamento/
+tentativas para o laço não disparar.
+
+<Callout variant="info">
+  💬 **Sou seu professor.** Tem um sistema seu (ou um dos 6 cenários da prova) e
+  está na dúvida se é agente ou workflow? Me descreve no chat que a gente passa pela
+  régua junto — é o melhor jeito de calibrar o olho para a prova.
+</Callout>
+
+## Teste rápido (estilo prova)
+
+<Quiz
+  questions={[
+    {
+      prompt: "Um colega define agente assim: 'é o sistema que decide as próximas subtarefas a partir do resultado das primeiras'. Qual é o problema dessa definição?",
+      options: [
+        "Nenhum — é exatamente a definição correta de agente.",
+        "Ela também descreve o orquestrador-trabalhadores; falta o laço aberto com parada decidida pelo modelo.",
+        "Agente nunca decide a partir de resultados; ele segue um caminho fixo.",
+      ],
+      answer: 1,
+      explanation: "O orquestrador também decide a partir de resultados (decompõe→sintetiza). A definição achata o agente. A diferença é o laço de feedback ABERTO e o critério de parada ser do modelo, não do código.",
+    },
+    {
+      prompt: "Uma tarefa de extração: dado um contrato, sempre rodar os mesmos 3 passos (limpar texto → extrair campos → validar schema) e devolver. Os passos nunca mudam. Agente ou workflow?",
+      options: [
+        "Agente — há decisão sobre o resultado da validação.",
+        "Workflow — o caminho é previsível e fixo; agente só adicionaria custo e imprevisibilidade.",
+        "Agente — qualquer tarefa com mais de um passo é agêntica.",
+      ],
+      answer: 1,
+      explanation: "Caminho fixo e previsível = workflow (encadeamento). Subir para agente aqui só traria latência/custo/imprevisibilidade sem ganho. A régua: comece simples.",
+    },
+    {
+      prompt: "Qual cenário JUSTIFICA um agente em vez de um workflow?",
+      options: [
+        "Triar tickets em 3 categorias conhecidas, cada uma com seu prompt.",
+        "Depurar um bug num repositório: explorar arquivos, rodar testes, ler erros e decidir o próximo passo — sem saber de antemão quantas iterações serão necessárias.",
+        "Gerar um resumo de um texto numa única chamada.",
+      ],
+      answer: 1,
+      explanation: "Depurar é problema aberto: nº de passos imprevisível e caminho emergente guiado pelo ground truth (saída dos testes). O 1º é roteamento; o 3º é chamada única.",
+    },
+    {
+      prompt: "O que, na prática, IMPEDE o laço de um agente de rodar para sempre?",
+      options: [
+        "Nada — agentes rodam até o orçamento da conta acabar.",
+        "Um número de passos fixado no código, como no orquestrador.",
+        "O modelo decidir que concluiu (ou pedir ajuda), apoiado em andaimes como condições de parada e limites de tentativas.",
+      ],
+      answer: 2,
+      explanation: "A parada é decidida pelo modelo a partir do ground truth — por isso é laço aberto. Em produção, andaimes (stopping conditions, limites) protegem contra o laço degenerar. Nº fixo no código seria workflow.",
+    },
+  ]}
+/>
+
+<AskBox title="Sua vez de produzir">
+  Para virar aprendizado, me mande no chat sua **pseudo-cola** desta Aula:
+
+  1. Em **uma frase sua**, complete: "Um orquestrador-trabalhadores vira um agente
+     quando ______." (a frase tem que conter a ideia do laço aberto **e** de quem
+     decide parar — não só "decomposição dinâmica").
+  2. Dê **um exemplo do seu próprio uso de Claude Code** que seja claramente
+     agêntico, e diga **qual das duas propriedades** (passos imprevisíveis / parada
+     decidida pelo modelo) você consegue apontar nele.
+
+  É na compressão que fixa — e dela sai sua entrada de glossário.
+</AskBox>
+
+<Nav
+  prev={{ href: "../0002-padroes-de-workflow/", label: "Lição 02", sub: "Os 5 padrões de workflow" }}
+/>
+
+<Sources
+  items={[
+    { label: "Anthropic — Building Effective Agents (workflow vs. agent; quando usar cada um; custo/latência)", href: "https://www.anthropic.com/engineering/building-effective-agents" },
+    { label: "Anthropic — Effective context engineering / action loop (agente observa ground truth e re-planeja)", href: "https://www.anthropic.com/engineering/building-effective-agents" },
+  ]}
+/>
