@@ -1,8 +1,15 @@
 ---
-status: accepted (refina ADR 0002)
+status: accepted (refina ADR 0002, refinada pela ADR 0005)
 ---
 
 # Esboços como Componentes Astro em `src/sketches/`, promovidos ao Catálogo
+
+> **Refinada pela [ADR 0005](./0005-aulas-no-firestore-com-astro-ssr.md):** com o
+> render em runtime, o Esboço passa de `.astro` para **Preact**, e o
+> `registry.ts` morre — o binding Aula→Esboço vira o campo `esbocos[]` no doc da
+> Aula no Firestore. O que define um Esboço (uso único, ligado à Aula, não
+> anunciado, promovível) e o caminho de promoção descritos abaixo seguem valendo;
+> muda só o mecanismo (linguagem do Esboço e onde mora a ligação).
 
 Um **Esboço** é implementado como um **Componente Astro** (`.astro`), authored
 pelo **Desenvolvedor** em `src/sketches/`, e ligado à sua Aula por um registry

@@ -32,9 +32,9 @@ design system.
 Um Componente de uso único, criado para uma única Aula quando nenhum Componente
 do Catálogo serve. Vive fora do Catálogo e não é anunciado no guia; é ligado à
 sua Aula e usado pelo nome, como qualquer Componente. Continua nos trilhos: usa
-os design tokens, é escopado e offline-safe (sem bibliotecas externas, CDN ou
-rede). Quando se prova reutilizável, é promovido a Componente do Catálogo.
-_Avoid_: ilha (todo Componente interativo já é uma "island" do Astro), widget, snippet.
+os design tokens, é escopado e leve (sem bibliotecas externas, CDN ou rede).
+Quando se prova reutilizável, é promovido a Componente do Catálogo.
+_Avoid_: ilha (todo Componente interativo já é uma "island"), widget, snippet.
 
 **Solicitação de Componente**:
 O sinal que o Professor emite quando julga que um Esboço é reutilizável e merece
@@ -52,19 +52,21 @@ _Avoid_: Pedagogo, autor, gerador (use "Professor"; a skill `/professor` no repo
 
 **Desenvolvedor**:
 O agente que, a pedido do Professor, cria um Esboço e o entrega pronto para uso.
-É o oposto do Professor no eixo do conhecimento: conhece a Plataforma (Astro) e
-constrói o Esboço nos trilhos. Abre a Solicitação de Componente quando o Professor
+É o oposto do Professor no eixo do conhecimento: conhece a Plataforma (Astro SSR,
+Preact, o banco) e constrói o Esboço nos trilhos. Abre a Solicitação de Componente quando o Professor
 sinaliza que o Esboço é reutilizável.
 _Avoid_: subagente-ponte, dev, programador.
 
 **Plataforma**:
-Este repositório: Astro, a implementação do Catálogo, o build e a publicação no
-GitHub Pages. Renderiza e valida o MDX que o Professor escreve; o Professor nunca
-a enxerga.
+Este repositório e o serviço que o publica: Astro em SSR (Firebase App Hosting), a
+implementação do Catálogo (em Preact) e a leitura das Aulas do banco. Renderiza
+dinamicamente — por requisição — o MDX que o Professor escreve, e valida-o; o
+Professor nunca a enxerga.
 _Avoid_: site, app, renderer, frontend.
 
 **Frontmatter**:
 Os metadados de primeira classe de uma Aula (título, ordem, domínio, resumo,
-pré-requisitos, duração). Indexável e consultável; é o que, no futuro, viraria
-as colunas de uma Aula por usuário num banco.
+pré-requisitos, duração). Indexável e consultável: são os **campos** do documento
+da Aula no banco (Firestore), ao lado do corpo MDX. No futuro, as colunas de uma
+Aula por usuário.
 _Avoid_: cabeçalho, meta, header.

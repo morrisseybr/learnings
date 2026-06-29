@@ -1,5 +1,12 @@
 # Astro + MDX como plataforma de Aulas (substituindo o HTML artesanal)
 
+> **Realizada pela [ADR 0005](./0005-aulas-no-firestore-com-astro-ssr.md):** o
+> "Futuro previsto" abaixo aconteceu. As Aulas saíram dos arquivos para o
+> Firestore, `output` foi de `static` para `server`, e o render passou de
+> build-time para runtime (`@mdx-js/mdx`). O modelo estático/GitHub Pages e o
+> glob loader de Content Collections deixam de valer; o seam fonte↔render que
+> esta ADR manteve limpo é o que tornou a troca barata.
+
 As Aulas deixam de ser HTML auto-contido escrito à mão e passam a ser **MDX**
 renderizado por um projeto **Astro** (saída estática) na raiz do repositório. O
 Astro lê as Aulas de `courses/*/lessons/*.mdx` via o glob loader de Content
