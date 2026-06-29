@@ -19,6 +19,9 @@
     "@astrojs/mdx": "^6.0.3",
     "astro": "^6.4.8",
     "gray-matter": "^4.0.3",
+    "mdast-util-from-markdown": "^2.0.3",
+    "mdast-util-mdx": "^3.0.0",
+    "micromark-extension-mdxjs": "^3.0.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9",
     "zod": "^4.4.3"

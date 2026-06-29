@@ -1,16 +1,27 @@
 import { test, expect } from "vitest";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 
 import { renderCatalogGuide } from "../src/lib/catalog-guide";
 import { catalogComponents } from "../src/catalog";
 import { catalog } from "../src/components/catalog";
 
 // Seam: the guide is a pure function of the Catalog's data — feed the
-// definitions in, observe the Professor-facing Markdown out. We assert on what
-// the Professor must be able to read (names, when-to-use, props), not on the
-// exact layout of the document.
+// definitions in, observe the Professor-facing Markdown out. Each Component's
+// props are read through the same lens the generator uses (the Zod schema's
+// JSON-Schema input view), so the test's source of truth is the schema, not a
+// parallel hand-written prop list.
 const guide = renderCatalogGuide(catalogComponents);
+
+// Read each Component's props as the generator does (input view, so a prop with a
+// default reads as optional and carries its default).
+function propsOf(schema: z.ZodObject) {
+  const json = z.toJSONSchema(schema, { io: "input" }) as {
+    properties?: Record<string, { description?: string }>;
+  };
+  return Object.entries(json.properties ?? {});
+}
 
 test("lists every Catalog Component under its own heading", () => {
   for (const component of catalogComponents) {
@@ -24,11 +35,12 @@ test("carries each Component's when-to-use prose", () => {
   }
 });
 
-test("documents every prop's name, type and description", () => {
+test("documents every prop's name and describe() prose from the schema", () => {
   for (const component of catalogComponents) {
-    for (const prop of component.props) {
-      expect(guide).toContain(prop.name);
-      expect(guide).toContain(prop.description);
+    for (const [name, node] of propsOf(component.props)) {
+      expect(guide).toContain(`\`${name}\``);
+      expect(node.description).toBeTruthy();
+      expect(guide).toContain(node.description!);
     }
   }
 });
@@ -42,9 +54,11 @@ test("documents every slot a Component accepts", () => {
 });
 
 test("escapes union-type pipes so the prop table stays valid Markdown", () => {
-  // Callout's `variant` is `"info" | "warn" | "ok"`. An unescaped pipe inside a
-  // table cell would split it into bogus columns; the generator must escape it.
+  // Callout's `variant` is the enum `"info" | "warn" | "ok"`. An unescaped pipe
+  // inside a table cell would split it into bogus columns; the generator escapes
+  // it.
   expect(guide).toContain("\\|");
+  expect(guide).not.toMatch(/\| "info" \| "warn"/); // pipes escaped, not raw
 });
 
 test("the render Catalog and the guide source describe the same Components", () => {
