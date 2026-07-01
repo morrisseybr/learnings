@@ -9,8 +9,8 @@
  *
  * This module is *pure data*: it imports only `zod`, so a plain Node script can
  * read it to regenerate the guide. The same names key the render wiring (see
- * `src/components/catalog.ts`, kept in lockstep by a test), so a Component can
- * never be renderable but undocumented (or vice versa). Slots stay prose — Zod
+ * `src/components/preact/catalog.ts`, kept in lockstep by a test), so a Component
+ * can never be renderable but undocumented (or vice versa). Slots stay prose — Zod
  * models props, not the children/named slots a Component accepts.
  */
 import { z } from "zod";

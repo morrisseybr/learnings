@@ -11,9 +11,9 @@ import { Quiz } from "./Quiz";
 /**
  * The Preact render wiring for the Catalog — the `name → Component` map the
  * runtime MDX render (`renderAula`) resolves Component references through, so a
- * Lesson writes `<Callout>` with no import. This is the successor to the `.astro`
- * `src/components/catalog.ts` map: once the static route retires (a later slice
- * of PRD #21), this is the single render wiring.
+ * Lesson writes `<Callout>` with no import. Since the cutover (#27) retired the
+ * static `.astro` route and its `src/components/catalog.ts` map, this is the
+ * single render wiring.
  *
  * The Catalog's *definitions* (names, when-to-use, props schemas) remain the
  * single source of truth in `src/catalog.ts`; a lockstep test keeps this map's

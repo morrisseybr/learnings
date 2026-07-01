@@ -1,51 +1,49 @@
 /**
- * Seed one Lesson into Firestore — the hand-authored document the tracer-bullet
- * route (`/live/<course>/<lesson>`) reads (issue #22). Run once, against your
- * own Firebase project, with the **read/write** service account:
+ * The one-shot migration (issue #27): seed the Firestore that becomes the single
+ * source of truth from every `.mdx` under `courses/<curso>/lessons/` in the repo.
+ * Run once, against your own Firebase project, with the **read/write** account:
  *
- *   FIRESTORE_ADMIN_KEY=./secrets/admin-sa.json node scripts/seed-firestore.mts
+ *   FIRESTORE_ADMIN_KEY=./secrets/admin-sa.json npm run seed:firestore
  *
- * It writes `courses/{course}` and `courses/{course}/lessons/{slug}` with the
- * Frontmatter as fields, the body as `mdx` text, and the Esboço binding as
- * `esbocos[]` (ADR 0005). This is throwaway scaffolding for the tracer bullet;
- * the real migration of every `.mdx` is a later slice of the parent PRD (#21).
+ * For each Course it writes `courses/{course}` (name, human title from
+ * MISSION.md, order) and one `courses/{course}/lessons/{slug}` per Lesson
+ * (Frontmatter promoted to fields, body as the `mdx` text, `esbocos[]` from the
+ * snapshot below). After this runs and is verified, the app reads Lessons only
+ * from Firestore — the `.mdx` files stay in git as the pre-migration snapshot,
+ * which is why this script keeps reading them (it is a migration tool, not an app
+ * runtime path). Re-running fully overwrites every document it writes; it does
+ * *not* delete docs whose `.mdx` was renamed or removed, so prune those by hand
+ * if you re-seed after dropping a Lesson.
+ *
+ * The transform lives in the pure, tested `readSeedRecords` (Seam); this file is
+ * the thin Firestore-writing adapter around it — the same split as the read-side
+ * `firestore.ts` / `buildSiteModel`.
  */
+import { fileURLToPath } from "node:url";
 import { cert, getApps, initializeApp, applicationDefault } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
-const COURSE = "demo";
-const SLUG = "0001-bala-tracadora";
+import { readSeedRecords } from "../src/lib/seed-records.ts";
 
-const LESSON = {
-  title: "Bala traçadora: esta Aula vem do Firestore",
-  order: 1,
-  domain: "Plataforma",
-  summary:
-    "Você está lendo um documento do banco, compilado em runtime e renderizado por SSR — sem arquivo, sem build, sem deploy.",
-  prerequisites: [] as string[],
-  estMinutes: 3,
-  esbocos: [] as string[],
-  mdx: [
-    "Esta Aula **não existe como arquivo**. O texto que você lê é o campo `mdx`",
-    "de um documento no Firestore, compilado em runtime pelo `@mdx-js/mdx` e",
-    "renderizado pelo servidor a cada requisição.",
-    "",
-    '<Callout variant="ok">',
-    "  Se este aviso aparece com a cor e o ícone certos, o circuito fechou: o",
-    "  Componente **Callout** foi mapeado por nome, do banco até o HTML.",
-    "</Callout>",
-    "",
-    "## O que esta fatia prova",
-    "",
-    "- Astro em SSR (`output: 'server'`) com o adapter Node.",
-    "- A leitura do Firestore isolada num adapter fino.",
-    "- O render compilando o MDX do banco e mapeando nome → Componente Preact.",
-    "",
-    '<Callout variant="warn">',
-    "  Ainda é só o caminho feliz: sem validação, sem fallback por bloco e sem",
-    "  listagens. Essas camadas chegam nas próximas fatias da PRD.",
-    "</Callout>",
-  ].join("\n"),
+const COURSES_DIR = fileURLToPath(new URL("../courses", import.meta.url));
+
+/**
+ * A snapshot of the retired `src/sketches/registry.ts`: the Lesson→Esboço binding
+ * as it stood at migration time, keyed by `"<course>/<slug>"`. The registry file
+ * is removed in this same cutover, so the binding is inlined here — its final
+ * home is the Lesson document's `esbocos[]`, which this seed populates. A name
+ * still absent from the deployed Preact bundle degrades to the "em preparação"
+ * fallback at render time, not to a broken page.
+ */
+const ESBOCOS_BY_LESSON: Record<string, string[]> = {
+  "aws/0001-o-que-e-a-nuvem-e-por-que-importa": ["CapexOpex"],
+  "aws/0002-modelos-de-servico-e-implantacao": ["ResponsibilitySpectrum"],
+  "aws/0003-regioes-azs-e-edge-locations": ["RegionAzMap"],
+  "aws/0005-auto-scaling-e-load-balancing": ["ScalingArchitecture"],
+  "aws/0006-bonus-camadas-de-rede-l4-vs-l7": ["OsiStack"],
+  "aws/0007-amazon-s3-object-storage": ["BucketObjectKey"],
+  "claude/0001-agente-workflow-conversacional": ["AutonomySpectrum"],
+  "claude/0002-padroes-de-workflow": ["PatternFlow"],
 };
 
 // Intentionally NOT shared with src/lib/firestore.ts: that adapter is the
@@ -64,17 +62,36 @@ function db() {
 }
 
 async function main() {
+  const { courses, lessons } = readSeedRecords(COURSES_DIR, ESBOCOS_BY_LESSON);
   const firestore = db();
-  const courseRef = firestore.collection("courses").doc(COURSE);
 
-  await courseRef.set(
-    { name: COURSE, title: "Demo", order: 0 },
-    { merge: true },
+  for (const course of courses) {
+    // Full overwrite (no merge), like the Lesson write below, so a re-seed
+    // converges each Course doc to exactly what the reader produced. Setting the
+    // document does not touch its `lessons` subcollection.
+    await firestore
+      .collection("courses")
+      .doc(course.name)
+      .set({ name: course.name, title: course.title, order: course.order });
+  }
+
+  for (const lesson of lessons) {
+    const { course, slug, ...fields } = lesson;
+    await firestore
+      .collection("courses")
+      .doc(course)
+      .collection("lessons")
+      .doc(slug)
+      .set(fields);
+  }
+
+  console.log(
+    `Seeded ${courses.length} course(s) and ${lessons.length} lesson(s) into Firestore.`,
   );
-  await courseRef.collection("lessons").doc(SLUG).set(LESSON);
-
-  console.log(`Seeded courses/${COURSE}/lessons/${SLUG}`);
-  console.log(`Visit: /live/${COURSE}/${SLUG}`);
+  for (const course of courses) {
+    const count = lessons.filter((l) => l.course === course.name).length;
+    console.log(`  - courses/${course.name} — "${course.title}" (${count} aula(s))`);
+  }
 }
 
 main().catch((err) => {
