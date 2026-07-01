@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "aulas": {
+      "command": "npx",
+      "args": ["tsx", "scripts/mcp-server.mts"],
+      "env": {
+        "FIRESTORE_ADMIN_KEY": "${FIRESTORE_ADMIN_KEY:-./secrets/admin-sa.json}"
+      }
+    }
+  }
+}

@@ -70,7 +70,9 @@ export function buildSiteModel(
 }
 
 // Stable, locale-independent ordering so order is identical across platforms
-// (dev on Windows, CI on Linux).
-function compare(a: string, b: string): number {
+// (dev on Windows, CI on Linux). Exported so every adapter that orders Courses
+// or Lessons by id/slug shares this one rule rather than re-inlining a ternary
+// (the write path's `list_courses` reuses it).
+export function compare(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
