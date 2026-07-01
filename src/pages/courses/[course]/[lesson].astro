@@ -1,46 +1,55 @@
 ---
-// Static during the migration: the current Lessons render from `.mdx` files at
-// build time. The Firestore-backed SSR Lesson lives at /live/[course]/[lesson].
-export const prerender = true;
-
-import { getEntry, render } from "astro:content";
+// The Lesson route: a Lesson rendered from Firestore per request (issue #27).
+// Firestore is now the single source of truth — this route reads the document
+// through the thin read adapter, compiles the stored `mdx` at runtime, and
+// renders the full Preact Catalog by name, with the per-block fallback wired in
+// so an unknown Component, an Esboço not yet deployed, or invalid props degrade
+// just their block instead of crashing the page (issue #24). No `.mdx` file, no
+// build step, no `registry.ts`; the shell (LessonLayout/BaseLayout) stays `.astro`.
 import LessonLayout from "../../../layouts/LessonLayout.astro";
-import { catalog } from "../../../components/catalog";
-import { sketchesFor } from "../../../sketches/registry";
-import { readSiteModelFromFs } from "../../../lib/site-model-fs";
-import { COURSES_DIR } from "../../../lib/paths";
+import { readLesson, readCourseTitle } from "../../../lib/firestore";
+import { renderAula } from "../../../lib/render-aula";
+import { bundledSketches } from "../../../sketches/preact";
+import "../../../styles/catalog.css";
+import "../../../styles/sketches.css";
 
-export function getStaticPaths() {
-  const { courses } = readSiteModelFromFs(COURSES_DIR);
-  return courses.flatMap((course) =>
-    course.lessons.map((lesson) => ({
-      params: { course: course.name, lesson: lesson.slug },
-      props: { lesson, courseTitle: course.title },
-    }))
-  );
+const { course, lesson } = Astro.params;
+
+const record = await readLesson(course!, lesson!);
+if (!record) {
+  return new Response(`Aula não encontrada: ${course}/${lesson}`, {
+    status: 404,
+  });
 }
 
-const { lesson, courseTitle } = Astro.props;
+// The human Course title lives on the parent `courses/{course}` doc, not the
+// Lesson; fall back to the path id if it is missing.
+const courseTitle = (await readCourseTitle(record.course)) ?? record.course;
+
+// The render resolves Catalog Components by name internally; we hand it the
+// Lesson's declared Esboço names and the deployed Esboço bundle so it can bind
+// the ones it has and fall back on the ones still awaiting deploy.
+const body = await renderAula(record.mdx, {
+  esbocos: record.esbocos,
+  sketches: bundledSketches,
+});
+
 const base = import.meta.env.BASE_URL;
-
-const lessonId = `${lesson.course}/${lesson.slug}`;
-const entry = await getEntry("lessons", lessonId);
-if (!entry) {
-  throw new Error(`Lesson entry not found: ${lessonId}`);
-}
-const { Content } = await render(entry);
 ---
 
 <LessonLayout
-  title={lesson.title}
-  domain={lesson.domain}
-  summary={lesson.summary}
-  estMinutes={lesson.estMinutes}
+  title={record.title}
+  domain={record.domain}
+  summary={record.summary}
+  estMinutes={record.estMinutes}
   courseTitle={courseTitle}
-  courseHref={`${base}courses/${lesson.course}/`}
+  courseHref={`${base}courses/${record.course}/`}
 >
-  {/* The whole Catalog is provided here, so the MDX uses any Component
-      (<Callout>, <MissionBox>, <CompareCards>…) without importing. Plus this
-      Lesson's Esboços, scoped to it alone via the registry — never global. */}
-  <Content components={{ ...catalog, ...sketchesFor(lessonId) }} />
+  <Fragment set:html={body} />
 </LessonLayout>
+
+{/* The Quiz island's behaviour: a single framework-agnostic script that wires
+    every `[data-quiz]` the rendered MDX emitted. Static markup comes from the
+    Preact Quiz Component; this makes it interactive without Astro hydration,
+    which runtime-rendered MDX can't use. */}
+<script>import "../../../lib/quiz-client.ts";</script>
