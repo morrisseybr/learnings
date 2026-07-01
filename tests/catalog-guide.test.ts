@@ -6,6 +6,7 @@ import { z } from "zod";
 import { renderCatalogGuide } from "../src/lib/catalog-guide";
 import { catalogComponents } from "../src/catalog";
 import { catalog } from "../src/components/catalog";
+import { preactCatalog } from "../src/components/preact/catalog";
 
 // Seam: the guide is a pure function of the Catalog's data — feed the
 // definitions in, observe the Professor-facing Markdown out. Each Component's
@@ -66,6 +67,15 @@ test("the render Catalog and the guide source describe the same Components", () 
   // missing from the guide source (or vice-versa) is drift. Adding a Component —
   // or promoting an Esboço — must touch both, and this keeps them honest.
   expect(Object.keys(catalog).sort()).toEqual(
+    catalogComponents.map((component) => component.name).sort(),
+  );
+});
+
+test("the Preact render wiring stays in lockstep with the Catalog source", () => {
+  // The runtime MDX render (`renderAula`) resolves Components through the Preact
+  // map; a name renderable there but undocumented (or vice-versa) is the same
+  // drift, caught for the path that now serves Lessons from the database.
+  expect(Object.keys(preactCatalog).sort()).toEqual(
     catalogComponents.map((component) => component.name).sort(),
   );
 });

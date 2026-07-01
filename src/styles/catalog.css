@@ -50,3 +50,287 @@
   border-left-color: var(--ok);
   background: var(--ok-bg);
 }
+
+/* MissionBox — mirrors the scoped <style> in src/components/MissionBox.astro. */
+.mission {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  font-size: 14.5px;
+  margin: 20px 0;
+}
+.mission__title {
+  margin: 0 0 6px;
+}
+.mission__title strong {
+  color: var(--accent-deep);
+}
+.mission__body > :first-child {
+  margin-top: 0;
+}
+.mission__body > :last-child {
+  margin-bottom: 0;
+}
+.mission__meta {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+/* AskBox — mirrors the scoped <style> in src/components/AskBox.astro. */
+.ask {
+  background: var(--aws);
+  color: #fff;
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin: 24px 0;
+}
+.ask__title {
+  color: #fff;
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.ask__body {
+  color: #cdd8e3;
+  font-size: 14.5px;
+}
+.ask__body > :first-child {
+  margin-top: 0;
+}
+.ask__body > :last-child {
+  margin-bottom: 0;
+}
+.ask__body code {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+/* Sources — mirrors the scoped <style> in src/components/Sources.astro. */
+.sources {
+  margin: 24px 0 0;
+}
+.sources__title {
+  color: var(--aws);
+  font-size: 16px;
+  margin: 0 0 6px;
+}
+.sources__list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.sources__item {
+  margin: 4px 0;
+}
+.sources__item .ref {
+  color: var(--accent-deep);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--accent-deep);
+}
+
+/* Nav — mirrors the scoped <style> in src/components/Nav.astro. */
+.nav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 18px 0 6px;
+}
+.nav__link {
+  flex: 1;
+  min-width: 200px;
+  text-decoration: none;
+  color: var(--aws);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  background: var(--card);
+}
+.nav__link:hover {
+  border-color: var(--accent);
+  background: #fffaf3;
+}
+.nav__link--next {
+  text-align: right;
+}
+.nav__link b {
+  color: var(--accent-deep);
+}
+.nav__link small {
+  display: block;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* CompareCards — mirrors the scoped <style> in src/components/CompareCards.astro. */
+.compare {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.compare__card {
+  flex: 1;
+  min-width: 200px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+}
+.compare__card--highlight {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft) inset;
+}
+.compare__tag {
+  font-size: 11.5px;
+  color: var(--accent-deep);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.compare__label {
+  font-weight: 700;
+  color: var(--aws);
+  font-size: 14.5px;
+  margin-top: 2px;
+}
+.compare__desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* Quiz — mirrors the scoped <style> in src/components/Quiz.astro. The
+ * interactivity lives in src/lib/quiz-client.ts, shipped by the Lesson shell. */
+.quiz {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin: 20px 0;
+}
+.quiz__title {
+  margin: 0 0 14px;
+  font-size: 16px;
+  color: var(--aws);
+}
+.quiz__q {
+  margin-top: 18px;
+}
+.quiz__q:first-of-type {
+  margin-top: 0;
+}
+.quiz__num {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+}
+.quiz__prompt {
+  font-weight: 600;
+  font-size: 15.5px;
+  margin: 6px 0 12px;
+  color: var(--aws);
+}
+.quiz__opt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 8px 0;
+  font-size: 14.5px;
+  font-family: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: 0.15s;
+}
+.quiz__opt:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: #fffaf3;
+}
+.quiz__opt:disabled {
+  cursor: default;
+}
+.quiz__opt--correct {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+}
+.quiz__opt--wrong {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+}
+.quiz__fb {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.quiz__fb[hidden] {
+  display: none;
+}
+.quiz__fb--ok {
+  background: var(--ok-bg);
+  color: #155f37;
+}
+.quiz__fb--no {
+  background: var(--danger-bg);
+  color: #8a1f2c;
+}
+.quiz__score {
+  margin: 18px 0 0;
+  font-weight: 700;
+  color: var(--aws);
+}
+.quiz__score[hidden] {
+  display: none;
+}
+
+/* Per-block fallback — when a block can't render (unknown Component, an Esboço
+ * not yet deployed, or invalid props), it degrades to one of these in place so
+ * the rest of the Lesson stays legible. Wired by renderAula from the same
+ * taxonomy validateAula enforces (src/lib/render-aula.ts). */
+.fallback {
+  display: flex;
+  gap: 10px;
+  border: 1px dashed var(--line-strong);
+  border-left: 4px solid var(--muted);
+  background: var(--soft);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 18px 0;
+  font-size: 14px;
+}
+.fallback__icon {
+  flex: none;
+  line-height: 1.5;
+}
+.fallback__body {
+  min-width: 0;
+}
+.fallback__title {
+  font-weight: 700;
+  color: var(--aws);
+}
+.fallback__detail {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.fallback--sketch {
+  border-left-color: var(--info);
+}
+.fallback--invalid-props {
+  border-left-color: var(--warn);
+}
+.fallback--unknown {
+  border-left-color: var(--danger);
+}

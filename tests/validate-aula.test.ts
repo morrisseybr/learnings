@@ -130,6 +130,17 @@ test("a name in esbocos[] absent from the bundle is a warning, not an error", ()
   expect(warning.subject).toBe("NotYetDeployed");
 });
 
+test("a slot-named attribute is content, not a prop — MissionBox `meta` is accepted", () => {
+  // `meta` is a MissionBox slot, not a prop in its schema. The validator must not
+  // reject it (the render supports it), or write-time and render-time diverge.
+  const result = validateAula(
+    aula({ mdx: '<MissionBox meta="~6 min">Por que isto importa.</MissionBox>' }),
+  );
+
+  expect(result.ok).toBe(true);
+  expect(result.issues).toEqual([]);
+});
+
 test("a Quiz answer index out of range is an error", () => {
   // `answer` is a 0-based index into `options`; 5 with two options is invalid.
   const result = validateAula(

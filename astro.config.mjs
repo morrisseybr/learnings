@@ -3,30 +3,11 @@ import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
 import node from "@astrojs/node";
 
-// Wrap every Markdown/MDX `<table>` in a `.table-scroll` container so wide
-// comparison tables scroll horizontally inside the Lesson card instead of
-// overflowing it on mobile (see LessonLayout's `.table-scroll` styles).
-// Dependency-free hast walk so it adds no npm dependency to the offline PWA.
-function rehypeTableScroll() {
-  return (tree) => {
-    const wrap = (node) => {
-      if (!node.children) return;
-      for (let i = 0; i < node.children.length; i++) {
-        const child = node.children[i];
-        if (child.type === "element" && child.tagName === "table") {
-          node.children[i] = {
-            type: "element",
-            tagName: "div",
-            properties: { className: ["table-scroll"] },
-            children: [child],
-          };
-        }
-        wrap(child);
-      }
-    };
-    wrap(tree);
-  };
-}
+// The table-scroll rehype plugin is the single source in src/lib/rehype-table-scroll.ts
+// (see its header): the build-time `.mdx`/`.astro` pipeline (here) and the runtime
+// MDX render (`renderAula`) share it, so a wide table scrolls the same whether the
+// Lesson is rendered at build time or per request from Firestore.
+import { rehypeTableScroll } from "./src/lib/rehype-table-scroll.ts";
 
 // SSR output: the Platform now renders Lessons per request, reading them from
 // Firestore (ADR 0005). The Node adapter (standalone) is the server Firebase

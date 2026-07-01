@@ -1,16 +1,16 @@
 ---
-// The tracer-bullet route (issue #22): a single Lesson rendered from Firestore
-// via SSR. No `prerender` — this runs per request. It reads the document through
-// the thin Firestore adapter, compiles the stored `mdx` at runtime, and renders
-// the Preact Catalog by name. The shell (LessonLayout/BaseLayout) stays `.astro`.
-//
-// This is the happy path only: no validation, no per-block fallback, no Esboço
-// wiring yet — those are later slices of the parent PRD (#21).
+// The SSR Lesson route: a Lesson rendered from Firestore per request. It reads
+// the document through the thin Firestore adapter, compiles the stored `mdx` at
+// runtime, and renders the full Preact Catalog by name — with the per-block
+// fallback wired in, so an unknown Component, an Esboço not yet deployed, or
+// invalid props degrade just their block instead of crashing the page (issue
+// #24). The shell (LessonLayout/BaseLayout) stays `.astro`.
 import LessonLayout from "../../../layouts/LessonLayout.astro";
 import { readLesson, readCourseTitle } from "../../../lib/firestore";
 import { renderAula } from "../../../lib/render-aula";
-import { Callout } from "../../../components/preact/Callout";
+import { bundledSketches } from "../../../sketches/preact";
 import "../../../styles/catalog.css";
+import "../../../styles/sketches.css";
 
 const { course, lesson } = Astro.params;
 
@@ -25,10 +25,13 @@ if (!record) {
 // Lesson; fall back to the path id if it is missing.
 const courseTitle = (await readCourseTitle(record.course)) ?? record.course;
 
-// The Preact Catalog mapped by name. Only Callout is ported in this slice — the
-// rest of the Catalog and the Esboço binding (record.esbocos) arrive later.
-const components = { Callout };
-const body = await renderAula(record.mdx, components);
+// The render resolves Catalog Components by name internally; we hand it the
+// Lesson's declared Esboço names and the deployed Esboço bundle so it can bind
+// the ones it has and fall back on the ones still awaiting deploy.
+const body = await renderAula(record.mdx, {
+  esbocos: record.esbocos,
+  sketches: bundledSketches,
+});
 
 const base = import.meta.env.BASE_URL;
 ---
@@ -43,3 +46,9 @@ const base = import.meta.env.BASE_URL;
 >
   <Fragment set:html={body} />
 </LessonLayout>
+
+{/* The Quiz island's behaviour: a single framework-agnostic script that wires
+    every `[data-quiz]` the rendered MDX emitted. Static markup comes from the
+    Preact Quiz Component; this makes it interactive without Astro hydration,
+    which runtime-rendered MDX can't use. */}
+<script>import "../../../lib/quiz-client.ts";</script>

@@ -2,8 +2,23 @@ import { fromMarkdown } from "mdast-util-from-markdown";
 import { mdxFromMarkdown } from "mdast-util-mdx";
 import { mdxjs } from "micromark-extension-mdxjs";
 
-import { catalogSchemas } from "../catalog";
+import { catalogComponents, catalogSchemas } from "../catalog";
 import { lessonFrontmatter } from "./frontmatter";
+
+/**
+ * A Component's named slots, keyed by name. A slot is content (children / a named
+ * region), not a prop, so a slot-named attribute must not be validated against the
+ * props schema — the Catalog models props with Zod and slots in prose. The render
+ * strips these before its own per-instance check (`makeCatalogBlock`), so writing
+ * and rendering agree on what counts as a prop. Built from the single Catalog
+ * source, so it can never drift from the schemas.
+ */
+const catalogSlots: Record<string, Set<string>> = Object.fromEntries(
+  catalogComponents.map((component) => [
+    component.name,
+    new Set(component.slots.map((slot) => slot.name)),
+  ]),
+);
 
 /**
  * Seam C — the single source of validation, shared by the MCP write (which
@@ -104,7 +119,16 @@ export function validateAula(aula: Aula, options: ValidateOptions = {}): Validat
       // Props with a non-static expression can't be evaluated here; the render's
       // per-block fallback covers them at runtime, so we don't flag a false error.
       if (usage.dynamic) continue;
-      const parsed = schema.safeParse(usage.props);
+      // Slot-named attributes are content, not props (e.g. MissionBox's `meta`);
+      // drop them so a strict schema doesn't reject a valid slot, exactly as the
+      // render does before its per-instance check.
+      const slots = catalogSlots[usage.name];
+      const props = slots
+        ? Object.fromEntries(
+            Object.entries(usage.props).filter(([key]) => !slots.has(key)),
+          )
+        : usage.props;
+      const parsed = schema.safeParse(props);
       if (!parsed.success) {
         for (const issue of parsed.error.issues) {
           const path = issue.path.join(".");
@@ -141,6 +165,20 @@ export function validateAula(aula: Aula, options: ValidateOptions = {}): Validat
   }
 
   return { ok: errors.length === 0, errors, warnings, issues: [...errors, ...warnings] };
+}
+
+/**
+ * The capitalized Component names a Lesson's MDX references, deduplicated. The
+ * render reuses this so the per-block fallback is decided over exactly the names
+ * the validator sees — one parse, one source of names. Returns an empty set when
+ * the body can't be parsed (the render's compile step surfaces that separately).
+ */
+export function referencedComponentNames(mdx: string): Set<string> {
+  try {
+    return new Set(collectComponentUsages(mdx).map((usage) => usage.name));
+  } catch {
+    return new Set();
+  }
 }
 
 // --- MDX → Component usages -------------------------------------------------
